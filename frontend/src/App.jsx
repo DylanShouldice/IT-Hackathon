@@ -11,15 +11,14 @@ import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 
 function App() {
-  const [isLoggedin, setIsLoggedin] = useState(true);
-  const [isRegistered, setIsRegistered] = useState(true);
+  const [isLoggedin, setIsLoggedin] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
 
   return (
     <Router>
       <div>
-        <Dashboard />
         <Routes>
-          {isRegistered ? (
+          {!isRegistered ? (
             <Route
               path="/"
               element={<Register setIsRegistered={setIsRegistered} />}
