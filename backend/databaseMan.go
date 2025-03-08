@@ -56,6 +56,16 @@ func writeUserData(user User, db *sql.DB) {
 	}
 }
 
+func straightQuery(query string, db *sql.DB) sql.Result {
+	res, err := db.Exec(query)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(res)
+
+	return res
+}
+
 func readUserData(id int, db *sql.DB) {
 	// read the user data from the database
 	query := "SELECT * FROM users WHERE id = " + strconv.Itoa(id)
