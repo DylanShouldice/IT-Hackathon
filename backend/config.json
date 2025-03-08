@@ -3,9 +3,9 @@
     "port": ":50000",
     "Db": {
         "db_host": "localhost",
-        "db_port": "0000",
-        "db_name": "db_name",
-        "db_user": "db_user",
-        "db_password": "db_password"
+        "db_port": "3306",
+        "db_name": "MySQL80",
+        "db_user": "root",
+        "db_password": "Thejoes!23"
     }
 }
