@@ -1,15 +1,28 @@
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import axios from 'axios'
 
-const patients = [
-	{ id: 1, name: 'John Doe', reports: ['report1.pdf', 'report2.pdf'] },
-	{ id: 2, name: 'Jane Smith', reports: ['report3.pdf'] },
-	{ id: 3, name: 'Michael Brown', reports: ['report4.pdf', 'report5.pdf'] },
-]
-
-function PatientTable({ patients }) {
+function PatientTable({ doctorId }) {
+	const [patients, setPatients] = useState([]) // Set initial state as an empty array
 	const [selectedReports, setSelectedReports] = useState(null)
-	const [recordingStatus, setRecordingStatus] = useState({}) // Store recording status for each patient
+	const [recordingStatus, setRecordingStatus] = useState({})
 	const recordingWindowsRef = useRef({}) // Store references to recording windows
+
+	useEffect(() => {
+		const fetchPatients = async () => {
+			try {
+				const response = await axios.get('http://localhost:8080/api/patients', {
+					params: { doctorId },
+				})
+				setPatients(response.data)
+			} catch (error) {
+				console.error('Error fetching patients:', error)
+			}
+		}
+
+		if (doctorId) {
+			fetchPatients()
+		}
+	}, [doctorId])
 
 	const handleViewReports = (reports) => {
 		setSelectedReports(reports)
@@ -279,7 +292,7 @@ function PatientTable({ patients }) {
               formData.append('pausePoints', JSON.stringify(recordingData.pausePoints.map(d => d.toISOString())));
               
               // Send to server
-              const apiUrl = '/api/recordings';  // Replace with your actual API endpoint
+              const apiUrl = 'http://localhost:8080/api/recordings';
               
               fetch(apiUrl, {
                 method: 'POST',
