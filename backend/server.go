@@ -106,9 +106,18 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPasswordFromDB := []byte("example_hashed_password") //replace with your DB query.
+	var hashedPasswordFromDB string
+	err = server.data.QueryRow("SELECT password FROM userdata WHERE user = ?", user.Email).Scan(&hashedPasswordFromDB)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	err = bcrypt.CompareHashAndPassword(hashedPasswordFromDB, []byte(user.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(hashedPasswordFromDB), []byte(user.Password))
 	if err != nil {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
@@ -144,5 +153,4 @@ func StartServer(s *Server) {
 	defer server.data.Close()
 
 	http.ListenAndServe(serverConfig.Port, handler)
-
 }
