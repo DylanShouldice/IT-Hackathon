@@ -14,21 +14,24 @@ type NutritionValues struct {
 }
 
 type FoodEntry struct {
-	ID        string    `json:"id"`
+	ID        int       `json:"id"`
 	FoodName  string    `json:"food_name"`
 	Calories  int       `json:"calories"`
 	TimeStamp time.Time `json:"timestamp"`
 }
 
-type UserData struct {
-	ID        int
-	Password  string
-	Height    int
-	age       int
-	allergies string
-	diet      string
-	privacy   bool
-	goal      string
+type Meal struct {
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+type WeighIn struct {
+	ID        int       `json:"id"`
+	Weight    int       `json:"weight"`
+	Exersice  int       `json:"exersice"`
+	UserID    int       `json:"userID"`
+	TimeStamp time.Time `json:"timestamp"`
 }
 
 func ConnectToDB() *sql.DB {
@@ -74,6 +77,16 @@ func readUserData(id int, db *sql.DB) {
 		panic(err)
 	}
 	fmt.Println(rows)
+
+}
+
+func writeMeal(meal Meal, db *sql.DB) {
+
+	query := "INSERT INTO meal (id, name, description) VALUES (?, ?, ?)"
+	_, err := db.Exec(query, meal.ID, meal.Name, meal.Description)
+	if err != nil {
+		panic(err)
+	}
 
 }
 
