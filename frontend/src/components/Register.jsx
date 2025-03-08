@@ -28,16 +28,11 @@ const RegisterForm = ({ setIsRegistered }) => {
         "http://localhost:8080/register",
         formData
       );
-
-      if (response.status === 200) {
-        alert("Form Submitted Successfully!");
-        setIsRegistered(true);
-      } else {
-        alert("Form Submission Failed!");
-      }
+      localStorage.setItem("token", response.data.token);
+      alert("Register successful!");
+      setIsRegistered(true);
     } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("Form Submission Failed!");
+      alert("Register failed");
     }
   };
 

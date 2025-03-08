@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { Line } from "react-chartjs-2";
 import Chart from "chart.js/auto";
 import axios from "axios";
-
+import BMIAndWeighIn from "./BMIAndWeighIn";
 const Dashboard = () => {
-  const [meals, setMeals] = useState({
+  const [meals, setMeals] = useState([]);
+  const [mealsByCategory, setMealsByCategory] = useState({
     breakfast: [],
     lunch: [],
     dinner: [],
@@ -22,6 +23,23 @@ const Dashboard = () => {
       try {
         const response = await axios.get("http://localhost:8080/meals");
         setMeals(response.data);
+
+        const categorized = {
+          breakfast: [],
+          lunch: [],
+          dinner: [],
+          snacks: [],
+        };
+
+        // Option 1: If meals have a category field
+        response.data.forEach((meal) => {
+          const category = meal.category?.toLowerCase() || "other";
+          if (categorized[category]) {
+            categorized[category].push(meal);
+          }
+        });
+
+        setMealsByCategory(categorized);
       } catch (error) {
         console.error("Error fetching meals:", error);
       }
@@ -299,91 +317,171 @@ const Dashboard = () => {
           <div className="border-b border-gray-200 pb-5 mb-6">
             <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
           </div>
+
+          {/* Updated Meals Section - Option 1: If you still want to display by categories */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-6">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">
               Recommended Meals
             </h2>
             <div className="space-y-3">
-              {Object.entries(meals).map(([mealType, mealList], index) => (
-                <div
-                  key={mealType}
-                  className="border border-gray-200 rounded-lg overflow-hidden"
-                >
-                  <button
-                    className="w-full flex justify-between items-center p-4 text-left focus:outline-none"
-                    onClick={() => toggleAccordion(index)}
-                    aria-expanded={openAccordion === index}
+              {Object.entries(mealsByCategory).map(
+                ([mealType, mealList], index) => (
+                  <div
+                    key={mealType}
+                    className="border border-gray-200 rounded-lg overflow-hidden"
                   >
-                    <span className="font-medium text-gray-700">
-                      {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
-                    </span>
-                    <svg
-                      className={`h-5 w-5 text-gray-500 transform transition-transform duration-200 ${
-                        openAccordion === index ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                    <button
+                      className="w-full flex justify-between items-center p-4 text-left focus:outline-none"
+                      onClick={() => toggleAccordion(index)}
+                      aria-expanded={openAccordion === index}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </button>
-                  {openAccordion === index && (
-                    <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
-                      <ul className="divide-y divide-gray-200">
-                        {mealList.length > 0 ? (
-                          mealList.map((meal) => (
-                            <li
-                              key={meal.id}
-                              className="py-3 flex justify-between items-center"
-                            >
-                              <span className="text-gray-700">{meal.name}</span>
-                              <button
-                                className="ml-4 text-indigo-600 hover:text-indigo-800 focus:outline-none"
-                                aria-label="View recipe"
+                      <span className="font-medium text-gray-700">
+                        {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
+                      </span>
+                      <svg
+                        className={`h-5 w-5 text-gray-500 transform transition-transform duration-200 ${
+                          openAccordion === index ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+                    {openAccordion === index && (
+                      <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                        <ul className="divide-y divide-gray-200">
+                          {mealList.length > 0 ? (
+                            mealList.map((meal) => (
+                              <li
+                                key={meal.id}
+                                className="py-3 flex justify-between items-center"
                               >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-5 w-5"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
+                                <div>
+                                  <span className="text-gray-700">
+                                    {meal.name}
+                                  </span>
+                                  {meal.description && (
+                                    <p className="text-gray-500 text-sm mt-1">
+                                      {meal.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <button
+                                  className="ml-4 text-indigo-600 hover:text-indigo-800 focus:outline-none"
+                                  aria-label="View recipe"
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                  />
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                  />
-                                </svg>
-                              </button>
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                    />
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                    />
+                                  </svg>
+                                </button>
+                              </li>
+                            ))
+                          ) : (
+                            <li className="py-3 text-gray-500">
+                              No meals available
                             </li>
-                          ))
-                        ) : (
-                          <li className="py-3 text-gray-500">
-                            No meals available
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              ))}
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )
+              )}
             </div>
           </div>
 
-          {/* Weight Goal Section */}
+          {/* Alternative Meals Section - Option 2: Display all meals in a list/grid */}
+          <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">
+                All Available Meals
+              </h2>
+              <Link
+                to="/add-meal"
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 mr-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Add Meal
+              </Link>
+            </div>
+            <div className="bg-white shadow overflow-hidden sm:rounded-md">
+              <ul className="divide-y divide-gray-200">
+                {meals.length > 0 ? (
+                  meals.map((meal) => (
+                    <li key={meal.id}>
+                      <div className="px-4 py-4 sm:px-6">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-medium text-indigo-600 truncate">
+                            {meal.name}
+                          </h3>
+                          <div className="ml-2 flex-shrink-0 flex">
+                            <Link
+                              to={`/meal/${meal.id}`}
+                              className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800"
+                            >
+                              View Details
+                            </Link>
+                          </div>
+                        </div>
+                        <div className="mt-2 sm:flex sm:justify-between">
+                          <div className="sm:flex">
+                            <p className="flex items-center text-sm text-gray-500">
+                              {meal.description || "No description available"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  ))
+                ) : (
+                  <li className="px-4 py-5 sm:px-6 text-center text-gray-500">
+                    No meals available. Add a meal to get started.
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
+          <BMIAndWeighIn
+            currentWeight={currentWeight}
+            setCurrentWeight={setCurrentWeight}
+          />
           <div className="bg-white rounded-xl shadow-md p-6">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">
               Weight Goal Progress

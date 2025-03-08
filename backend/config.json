@@ -1,11 +1,11 @@
 {
-    "host": "localhost",
-    "port": ":8080",
-    "Db": {
-        "db_host": "localhost",
-        "db_port": "3306",
-        "db_name": "dietapp",
-        "db_user": "root",
-        "db_password": "Thejoes!23"
-    }
+  "host": "localhost",
+  "port": ":8080",
+  "Db": {
+    "db_host": "localhost",
+    "db_port": "3306",
+    "db_name": "dietapp",
+    "db_user": "root",
+    "db_password": "Jakesam88!"
+  }
 }

@@ -25,6 +25,7 @@ const Login = ({ setIsLoggedin, setIsRegistered }) => {
 
       if (response.status === 200) {
         alert("Login Successful!");
+        localStorage.setItem("token", response.data.token);
         setIsLoggedin(true);
       } else {
         alert("Login Failed!");
