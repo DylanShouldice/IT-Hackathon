@@ -8,6 +8,7 @@ from app.schemas import PatientResponse
 from fastapi.middleware.cors import CORSMiddleware
 import traceback
 
+
 app = FastAPI()
 
 # Expand the origins list to include all possible localhost ports
