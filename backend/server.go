@@ -24,9 +24,13 @@ type Server struct {
 }
 
 type User struct {
-	Username    string `json:"Username"`
 	Password    string `json:"password"`
 	Email       string `json:"email"`
+	Height      string `json:"height"`
+	Age         string `json:"age"`
+	Allergies   string `json:"allergies"`
+	Diet        string `json:"diet"`
+	Gender      string `json:"gender"`
 	FoodEntries []FoodEntry
 	cmu         sync.Mutex
 }
@@ -82,8 +86,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	server.mu.Lock()
 	defer server.mu.Unlock()
 
-	server.Users[user.Username] = &User{
-		Username: user.Username,
+	server.Users[user.Email] = &User{
 		Password: string(hashedPassword),
 		Email:    user.Email,
 	}
@@ -117,7 +120,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	session.Values["authenticated"] = true
-	session.Values["username"] = user.Username
+	session.Values["username"] = user.Email
 	session.Save(r, w)
 
 	fmt.Fprintf(w, "Login successful")
@@ -127,30 +130,13 @@ func protectedHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Protected resource accessed")
 }
 
-func ConnectToDB() *sql.DB {
-	dsn := serverConfig.Db.Username + ":" + serverConfig.Db.Password + "@tcp(" + serverConfig.Db.Host + ":" + serverConfig.Db.Port + ")/" + serverConfig.Db.DbName
-	db, err := sql.Open("mysql", dsn)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to connect to the database. Error: %v\n", err)
-	}
-
-	fmt.Println("Successfully connected to the database!")
-	return db
-}
-
 func StartServer(s *Server) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/register", registerHandler)
 	mux.HandleFunc("/login", loginHandler)
 	mux.Handle("/protected", authMiddleware(http.HandlerFunc(protectedHandler)))
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello, World!")
 	})
 

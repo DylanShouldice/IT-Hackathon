@@ -1,10 +1,10 @@
 {
     "host": "localhost",
-    "port": ":50000",
+    "port": ":8080",
     "Db": {
         "db_host": "localhost",
         "db_port": "3306",
-        "db_name": "MySQL80",
+        "db_name": "dietapp",
         "db_user": "root",
         "db_password": "Thejoes!23"
     }
