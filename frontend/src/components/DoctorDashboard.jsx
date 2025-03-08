@@ -1,28 +1,15 @@
-import { useState, useEffect, useRef } from 'react'
-import axios from 'axios'
+import { useState, useRef } from 'react'
 
-function PatientTable({ doctorId, setPatients }) {
-	const [patients, setLocalPatients] = useState([]) // Set initial state as an empty array
+const patients = [
+	{ id: 1, name: 'John Doe', reports: ['report1.pdf', 'report2.pdf'] },
+	{ id: 2, name: 'Jane Smith', reports: ['report3.pdf'] },
+	{ id: 3, name: 'Michael Brown', reports: ['report4.pdf', 'report5.pdf'] },
+]
+
+function PatientTable({ patients }) {
 	const [selectedReports, setSelectedReports] = useState(null)
-	const [recordingStatus, setRecordingStatus] = useState({})
+	const [recordingStatus, setRecordingStatus] = useState({}) // Store recording status for each patient
 	const recordingWindowsRef = useRef({}) // Store references to recording windows
-
-	useEffect(() => {
-		const fetchPatients = async () => {
-			try {
-				const response = await axios.get('http://localhost:8000/api/patients', {
-					params: { doctor_id: doctorId },
-				})
-				setLocalPatients(response.data)
-			} catch (error) {
-				console.error('Error fetching patients:', error)
-			}
-		}
-
-		if (doctorId) {
-			fetchPatients()
-		}
-	}, [doctorId])
 
 	const handleViewReports = (reports) => {
 		setSelectedReports(reports)
@@ -292,7 +279,7 @@ function PatientTable({ doctorId, setPatients }) {
               formData.append('pausePoints', JSON.stringify(recordingData.pausePoints.map(d => d.toISOString())));
               
               // Send to server
-              const apiUrl = 'http://localhost:8000/api/recordings';
+              const apiUrl = '/api/recordings';  // Replace with your actual API endpoint
               
               fetch(apiUrl, {
                 method: 'POST',
@@ -378,7 +365,7 @@ function PatientTable({ doctorId, setPatients }) {
 	}
 
 	// Handle messages from recording windows
-	useEffect(() => {
+	useState(() => {
 		const handleMessage = (event) => {
 			// Check for recording update messages
 			if (event.data && event.data.type === 'recordingUpdate') {
@@ -477,7 +464,7 @@ function PatientTable({ doctorId, setPatients }) {
 	)
 }
 
-function QuickStats({ patients }) {
+function QuickStats() {
 	return (
 		<div className='grid grid-cols-3 gap-4'>
 			<div className='bg-white p-4 rounded-lg shadow-md'>
@@ -496,7 +483,7 @@ function QuickStats({ patients }) {
 	)
 }
 
-function DoctorDashboard() {
+export default function DoctorDashboard() {
 	return (
 		<div className='flex min-h-screen bg-gray-100'>
 			<div className='w-64 bg-gray-800 text-white p-4'>
@@ -504,11 +491,9 @@ function DoctorDashboard() {
 			</div>
 			<main className='flex-1 p-6 space-y-6'>
 				<h1 className='text-2xl font-bold'>Doctor Dashboard</h1>
-				<PatientTable doctorId={1} setPatients={() => {}} />{' '}
-				{/* Fixed: Added setPatients prop */}
+				<QuickStats />
+				<PatientTable patients={patients} />
 			</main>
 		</div>
 	)
 }
-
-export default DoctorDashboard
