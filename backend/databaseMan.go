@@ -37,7 +37,6 @@ func ConnectToDB() *sql.DB {
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
@@ -48,10 +47,10 @@ func ConnectToDB() *sql.DB {
 	return db
 }
 
-func writeUserData(user UserData, db *sql.DB) {
+func writeUserData(user User, db *sql.DB) {
 	// write the user data to the database
-	query := "INSERT INTO users (id, password, height, age, allergies, diet, privacy, goal) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-	_, err := db.Exec(query, user.ID, user.Password, user.Height, user.age, user.allergies, user.diet, user.privacy, user.goal)
+	query := "INSERT INTO userdata (id, password, height, age, allergies, diet, privacy, goal, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	_, err := db.Exec(query, user.Id, user.Password, user.Height, user.Age, user.Allergies, user.Diet, user.Privacy, user.Goal, user.Email)
 	if err != nil {
 		panic(err)
 	}
@@ -68,18 +67,18 @@ func readUserData(id int, db *sql.DB) {
 
 }
 
-func testDatabase() {
-	user := UserData{
-		ID:        1,
-		Password:  "password",
-		Height:    5,
-		age:       20,
-		allergies: "none",
-		diet:      "none",
-		privacy:   true,
-		goal:      "lose weight",
-	}
-	server.data = ConnectToDB()
-	writeUserData(user, server.data)
-	readUserData(1, server.data)
-}
+// func testDatabase() {
+// 	user := UserData{
+// 		ID:        1,
+// 		Password:  "password",
+// 		Height:    5,
+// 		age:       20,
+// 		allergies: "none",
+// 		diet:      "none",
+// 		privacy:   true,
+// 		goal:      "lose weight",
+// 	}
+// 	server.data = ConnectToDB()
+// 	writeUserData(user, server.data)
+// 	readUserData(1, server.data)
+// }
