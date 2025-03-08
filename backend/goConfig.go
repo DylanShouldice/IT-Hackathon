@@ -35,11 +35,11 @@ func NewConfig() *Config {
 		Host: v.GetString("host"),
 		Port: v.GetString("port"),
 		Db: DbConfig{
-			Host:     v.GetString("db_host"),
-			Port:     v.GetString("db_port"),
-			Username: v.GetString("db_username"),
-			Password: v.GetString("db_password"),
-			DbName:   v.GetString("db_name"),
+			Host:     v.GetString("Db.db_host"),
+			Port:     v.GetString("Db.db_port"),
+			Username: v.GetString("Db.db_user"),
+			Password: v.GetString("Db.db_password"),
+			DbName:   v.GetString("Db.db_name"),
 		},
 	}
 }

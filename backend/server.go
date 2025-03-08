@@ -10,6 +10,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
+	"github.com/rs/cors"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/time/rate"
 )
@@ -36,7 +37,7 @@ func NewServer() *Server {
 	return &Server{
 		Users:    make(map[string]*User),
 		Limiters: make(map[string]*rate.Limiter),
-		//data:     ConnectToDB(),
+		data:     ConnectToDB(),
 	}
 }
 
@@ -136,7 +137,7 @@ func ConnectToDB() *sql.DB {
 
 	err = db.Ping()
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "Failed to connect to the database. Error: %v\n", err)
 	}
 
 	fmt.Println("Successfully connected to the database!")
@@ -144,13 +145,17 @@ func ConnectToDB() *sql.DB {
 }
 
 func StartServer(s *Server) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/register", registerHandler)
+	mux.HandleFunc("/login", loginHandler)
+	mux.Handle("/protected", authMiddleware(http.HandlerFunc(protectedHandler)))
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello, World!")
 	})
-	http.HandleFunc("/register", registerHandler)
-	http.HandleFunc("/login", loginHandler)
-	http.Handle("/protected", authMiddleware(http.HandlerFunc(protectedHandler)))
 
-	http.ListenAndServe(serverConfig.Port, nil)
+	handler := cors.Default().Handler(mux)
+
+	http.ListenAndServe(serverConfig.Port, handler)
 
 }
