@@ -45,7 +45,7 @@ const RegisterForm = ({ setIsRegistered }) => {
     <div className="min-h-screen flex">
       <div className="hidden lg:flex w-1/2 relative">
         <div className="absolute inset-0 bg-cover bg-center bg-[url('/background_register.jpg')]"></div>
-        <div className="absolute inset-0 backdrop-blur-sm bg-black bg-opacity-50"></div>
+        <div className="absolute inset-0 backdrop-blur-sm bg-transparent"></div>
         <div className="flex flex-col items-center justify-center w-full h-full z-10 relative">
           <h1 className="text-white text-4xl font-bold">HealthPal</h1>
           <p className="text-white mt-4 text-lg text-left mx-5">
