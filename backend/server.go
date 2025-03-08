@@ -19,6 +19,7 @@ type Server struct {
 	Users      map[string]*User
 	Limiters   map[string]*rate.Limiter
 	APILimiter map[string]*rate.Limiter
+	clients    int
 	mu         sync.Mutex
 	data       *sql.DB
 }
@@ -31,8 +32,10 @@ type User struct {
 	Allergies   string `json:"allergies"`
 	Diet        string `json:"diet"`
 	Gender      string `json:"gender"`
+	Privacy     int    `json:"privacy"`
+	Goal        string `json:"goal"`
+	Id          int
 	FoodEntries []FoodEntry
-	cmu         sync.Mutex
 }
 
 var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
@@ -83,13 +86,10 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(w, "User registered successfully")
 
-	server.mu.Lock()
-	defer server.mu.Unlock()
-
-	server.Users[user.Email] = &User{
-		Password: string(hashedPassword),
-		Email:    user.Email,
-	}
+	user.Password = string(hashedPassword)
+	server.clients++
+	user.Id = server.clients
+	writeUserData(user, server.data)
 
 }
 
@@ -141,6 +141,7 @@ func StartServer(s *Server) {
 	})
 
 	handler := cors.Default().Handler(mux)
+	defer server.data.Close()
 
 	http.ListenAndServe(serverConfig.Port, handler)
 
