@@ -13,6 +13,8 @@ const RegisterForm = ({ setIsRegistered }) => {
 		diet: '',
 		gender: '',
 	})
+
+	const [termsOfService, setTermsOfService] = useState(false)
 	const [confirmPassword, setConfirmPassword] = useState('')
 
 	const handleInputChange = (e) => {
@@ -23,10 +25,65 @@ const RegisterForm = ({ setIsRegistered }) => {
 		})
 	}
 
+	const handleTermsOfService = () => {
+		const recordingWindow = window.open('', '', 'width=800,height=600')
+		if (recordingWindow) {
+			recordingWindow.document.write('<h1>Terms of Service</h1>')
+			recordingWindow.document.write(
+				'<p>Mediscribe uses openAIs whisper transcription software. By checking the checkboxes below you acknowledge that Mediscribe will record your conversation as a text file to be stored for later review. Mediscribe also sends your transcript to Googles Gemini AI to summarize the transcript into a readable report.</p>'
+			)
+			recordingWindow.document.write(`
+        <div>
+          <input type="checkbox" id="checkbox1"> I acknowledge that OpenAIs whisper will record and transcribe my consultation<br>
+          <input type="checkbox" id="checkbox2"> I acknowledge that Googles Gemini AI will be used to generate a report from the recorded transcription<br>
+        </div>
+        <button id="submitButton" disabled>Submit</button>
+      `)
+
+			recordingWindow.document.write(`
+        <script>
+          const checkbox1 = document.getElementById('checkbox1');
+          const checkbox2 = document.getElementById('checkbox2');
+          const submitButton = document.getElementById('submitButton');
+
+          function checkCheckboxes() {
+              if (checkbox1.checked && checkbox2.checked) {
+                  submitButton.disabled = false;
+              } else {
+                  submitButton.disabled = true;
+              }
+          }
+          checkbox1.addEventListener('change', checkCheckboxes);
+          checkbox2.addEventListener('change', checkCheckboxes);
+
+          submitButton.addEventListener('click', () => {
+              window.opener.postMessage('termsAccepted', '*');
+              window.close();
+          });
+        </script>
+      `)
+
+			// Listen for the message from the popup window to update the terms acceptance
+			window.addEventListener('message', (event) => {
+				if (event.data === 'termsAccepted') {
+					setTermsOfService(true)
+				}
+			})
+		}
+	}
+
 	const handleSubmit = async (e) => {
 		e.preventDefault()
+
+		// Check if passwords match
 		if (formData.password !== confirmPassword) {
 			alert('Passwords do not match')
+			return
+		}
+
+		// Check if terms of service is accepted
+		if (!termsOfService) {
+			alert('Please read and agree to the terms of service')
 			return
 		}
 
@@ -85,10 +142,10 @@ const RegisterForm = ({ setIsRegistered }) => {
 							</label>
 							<div className='relative'>
 								<input
-									type='lastName'
+									type='text'
 									className='block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900'
-									id='email'
-									name='email'
+									id='firstName'
+									name='firstName'
 									value={formData.firstName}
 									onChange={handleInputChange}
 									placeholder='John'
@@ -97,6 +154,7 @@ const RegisterForm = ({ setIsRegistered }) => {
 								/>
 							</div>
 						</div>
+
 						<div>
 							<label
 								htmlFor='lastName'
@@ -105,7 +163,7 @@ const RegisterForm = ({ setIsRegistered }) => {
 							</label>
 							<div className='relative'>
 								<input
-									type='lastName'
+									type='text'
 									className='block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900'
 									id='lastName'
 									name='lastName'
@@ -117,6 +175,7 @@ const RegisterForm = ({ setIsRegistered }) => {
 								/>
 							</div>
 						</div>
+
 						<div>
 							<label
 								htmlFor='email'
@@ -162,9 +221,10 @@ const RegisterForm = ({ setIsRegistered }) => {
 								Must be at least 8 characters
 							</p>
 						</div>
+
 						<div>
 							<label
-								htmlFor='password'
+								htmlFor='confirmPassword'
 								className='block text-sm font-medium text-gray-700 mb-1'>
 								Confirm Password
 							</label>
@@ -172,59 +232,51 @@ const RegisterForm = ({ setIsRegistered }) => {
 								<input
 									type='password'
 									className='block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900'
-									id='password'
-									name='password'
+									id='confirmPassword'
+									name='confirmPassword'
 									value={confirmPassword}
 									onChange={(e) => setConfirmPassword(e.target.value)}
-									placeholder='Create a strong password'
+									placeholder='Confirm your password'
 									required
 									aria-required='true'
 									minLength='8'
 								/>
 							</div>
-							<p className='mt-1 text-xs text-gray-500'>
-								Must be at least 8 characters
-							</p>
 						</div>
 
-						{/* Submit button */}
+						<div className='mt-4'>
+							<label htmlFor='termsOfService' className='flex items-center'>
+								<input
+									type='checkbox'
+									className='mr-2'
+									checked={termsOfService}
+									onChange={handleTermsOfService}
+								/>
+								I agree to the terms of service
+							</label>
+						</div>
+
 						<button
 							type='submit'
 							className='w-full py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 mt-6'
-							aria-label='Register account'>
+							aria-label='Register account'
+							disabled={!termsOfService}>
 							Create My Account
 						</button>
 
-						{/* Login link */}
 						<div className='mt-6 text-center'>
 							<p className='text-gray-600'>
 								Already have an account?{' '}
 								<button
 									type='button'
 									onClick={() => setIsRegistered(true)}
-									className='text-indigo-600 hover:text-indigo-800 font-medium focus:outline-none focus:underline transition-colors duration-200'>
-									Sign in
+									className='text-indigo-600 hover:text-indigo-800 font-medium'>
+									Login here
 								</button>
 							</p>
 						</div>
 					</form>
 				</div>
-
-				{/* Footer note */}
-				<p className='mt-8 text-center text-xs text-gray-500'>
-					By creating an account, you agree to our{' '}
-					<a
-						href='#'
-						className='text-indigo-600 hover:text-indigo-800 underline'>
-						Terms of Service
-					</a>{' '}
-					and{' '}
-					<a
-						href='#'
-						className='text-indigo-600 hover:text-indigo-800 underline'>
-						Privacy Policy
-					</a>
-				</p>
 			</div>
 		</div>
 	)

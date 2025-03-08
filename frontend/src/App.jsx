@@ -14,23 +14,51 @@ function App() {
 	const [isLoggedin, setIsLoggedin] = useState(true)
 	const [isRegistered, setIsRegistered] = useState(true)
 
+	// Handle navigation back to Register from Login
+	const handleBackToRegister = () => {
+		setIsRegistered(false) // Go back to Register
+	}
+
 	return (
 		<Router>
 			<div>
 				<Routes>
-					{!isRegistered ? (
-						<Route
-							path='/'
-							element={<Register setIsRegistered={setIsRegistered} />}
-						/>
-					) : !isLoggedin ? (
-						<Route path='/' element={<Login setIsLoggedin={setIsLoggedin} />} />
-					) : (
-						<Route path='/' element={<Navigate to='/dashboard' />} />
-					)}
-					{isLoggedin && (
-						<Route path='/dashboard' element={<DoctorDashboard />} />
-					)}
+					{/* Route to Register Page */}
+					<Route
+						path='/'
+						element={
+							!isRegistered ? (
+								<Register setIsRegistered={setIsRegistered} />
+							) : (
+								<Navigate to='/login' />
+							)
+						}
+					/>
+
+					{/* Route to Login Page */}
+					<Route
+						path='/login'
+						element={
+							!isLoggedin ? (
+								<Login
+									setIsLoggedin={setIsLoggedin}
+									setIsRegistered={handleBackToRegister}
+								/>
+							) : (
+								<Navigate to='/dashboard' />
+							)
+						}
+					/>
+
+					{/* Route to Dashboard */}
+					<Route
+						path='/dashboard'
+						element={
+							isLoggedin ? <DoctorDashboard /> : <Navigate to='/login' />
+						}
+					/>
+
+					{/* Redirect if the route doesn't match */}
 					<Route path='*' element={<Navigate to='/' />} />
 				</Routes>
 			</div>
