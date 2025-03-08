@@ -1,4 +1,6 @@
 from google import genai
+import requests
+import json
 
 client = genai.Client(api_key="AIzaSyBaNRpY3qjfoSfgg6IHdkN2I-rii29sVlA")
 
@@ -15,7 +17,21 @@ def read_transcript(file_path):
         print("An error occurred: ", e)
     return None #Ensure a return in all cases.
 
-def summarize_with_gemini(project_id, location, transcript):
+def remove_chars(input_string):
+  """Removes the first 8 and last 4 characters from a string.
+
+  Args:
+    input_string: The string to modify.
+
+  Returns:
+    The modified string, or an empty string if the input is too short.
+  """
+  if len(input_string) > 12:  # Ensure there are enough characters
+    return input_string[8:-4]
+  else:
+    return ""
+
+def summarize_with_gemini(transcript):
     """Summarizes a transcript using Gemini."""
 
 
@@ -28,43 +44,38 @@ def summarize_with_gemini(project_id, location, transcript):
     - Recommendations: List the doctor's recommendations and follow-up instructions.
     - Medications: List any medications mentioned, including dosages.
 
-    Use accurate medical terminology.
+    Use accurate medical terminology. The summary should be concise and high level.
 
     {transcript}
     """
 )
-    return response.text
+    replaced = response.text.replace("\n", "")
+    replaced = remove_chars(replaced)
 
-project_id = "phonic-botany-453116-i5" #replace with your project ID
-location = "us-east1" #replace with your location.
 
-# Test transcript
-test_transcript = """
-Patient: I've been having a persistent cough and shortness of breath for the past few weeks.
-Doctor: Do you have any allergies?
-Patient: I'm allergic to pollen.
-Doctor: Let's get a chest X-ray. I'm prescribing Albuterol, 2 puffs every 4 hours as needed. Follow up in one week.
-"""
 
-# Test without file read.
-if test_transcript:
-    print("Test transcript loaded.")
-    summary = summarize_with_gemini(project_id, location, test_transcript)
-    if summary:
-        print("Summary:\n", summary)
-    else:
-        print("Summary generation failed.")
-else:
-    print("Test transcript loading failed.")
+    api_key = 'sk_a5bf6e019e2aa8c2607761f185c7fcc9c729acd1'
 
-# Test with file read.
-transcript_text = read_transcript("transcript.txt") # Create a transcript.txt with test data.
-if transcript_text:
-    print("Transcript read successfully")
-    summary = summarize_with_gemini(project_id, location, transcript_text)
-    if summary:
-        print("Summary:\n", summary)
-    else:
-        print("Summary generation failed.")
-else:
-    print("Transcript read failed")
+    params = {
+        'source':  replaced,
+    }
+
+    response = requests.post(
+    'https://api.pdfshift.io/v3/convert/pdf',
+    auth=('api', 'sk_a5bf6e019e2aa8c2607761f185c7fcc9c729acd1'),
+    json={
+        "source": params,
+        "landscape": False,
+        "use_print": False
+    })
+    response.raise_for_status()
+
+    with open('result.pdf', 'wb') as f:
+        f.write(response.content)
+    print('The PDF document was generated and saved to result.pdf')
+    return response.content
+
+    
+
+print(summarize_with_gemini(read_transcript("backend\dylanEvanTest.txt")))
+
