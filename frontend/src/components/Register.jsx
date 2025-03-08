@@ -89,7 +89,7 @@ const RegisterForm = ({ setIsRegistered }) => {
 
 		try {
 			const response = await axios.post(
-				'http://localhost:8080/register',
+				'http://localhost:8000/register',
 				formData
 			)
 			localStorage.setItem('token', response.data.token)

@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 
-function PatientTable({ doctorId }) {
-	const [patients, setPatients] = useState([]) // Set initial state as an empty array
+function PatientTable({ doctorId, setPatients }) {
+	const [patients, setLocalPatients] = useState([]) // Set initial state as an empty array
 	const [selectedReports, setSelectedReports] = useState(null)
 	const [recordingStatus, setRecordingStatus] = useState({})
 	const recordingWindowsRef = useRef({}) // Store references to recording windows
@@ -10,10 +10,10 @@ function PatientTable({ doctorId }) {
 	useEffect(() => {
 		const fetchPatients = async () => {
 			try {
-				const response = await axios.get('http://localhost:8080/api/patients', {
-					params: { doctorId },
+				const response = await axios.get('http://localhost:8000/api/patients', {
+					params: { doctor_id: doctorId },
 				})
-				setPatients(response.data)
+				setLocalPatients(response.data)
 			} catch (error) {
 				console.error('Error fetching patients:', error)
 			}
@@ -292,7 +292,7 @@ function PatientTable({ doctorId }) {
               formData.append('pausePoints', JSON.stringify(recordingData.pausePoints.map(d => d.toISOString())));
               
               // Send to server
-              const apiUrl = 'http://localhost:8080/api/recordings';
+              const apiUrl = 'http://localhost:8000/api/recordings';
               
               fetch(apiUrl, {
                 method: 'POST',
@@ -378,7 +378,7 @@ function PatientTable({ doctorId }) {
 	}
 
 	// Handle messages from recording windows
-	useState(() => {
+	useEffect(() => {
 		const handleMessage = (event) => {
 			// Check for recording update messages
 			if (event.data && event.data.type === 'recordingUpdate') {
@@ -477,7 +477,7 @@ function PatientTable({ doctorId }) {
 	)
 }
 
-function QuickStats() {
+function QuickStats({ patients }) {
 	return (
 		<div className='grid grid-cols-3 gap-4'>
 			<div className='bg-white p-4 rounded-lg shadow-md'>
@@ -496,7 +496,7 @@ function QuickStats() {
 	)
 }
 
-export default function DoctorDashboard() {
+function DoctorDashboard() {
 	return (
 		<div className='flex min-h-screen bg-gray-100'>
 			<div className='w-64 bg-gray-800 text-white p-4'>
@@ -504,9 +504,11 @@ export default function DoctorDashboard() {
 			</div>
 			<main className='flex-1 p-6 space-y-6'>
 				<h1 className='text-2xl font-bold'>Doctor Dashboard</h1>
-				<QuickStats />
-				<PatientTable patients={patients} />
+				<PatientTable doctorId={1} setPatients={() => {}} />{' '}
+				{/* Fixed: Added setPatients prop */}
 			</main>
 		</div>
 	)
 }
+
+export default DoctorDashboard
