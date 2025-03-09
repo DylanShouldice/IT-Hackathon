@@ -2,7 +2,7 @@ from google import genai
 import requests
 import json
 
-client = genai.Client(api_key="AIzaSyBaNRpY3qjfoSfgg6IHdkN2I-rii29sVlA")
+client = genai.Client("removing this until we change to env variables")
 
 def read_transcript(file_path):
     """Reads the content of a text file."""
