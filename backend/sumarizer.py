@@ -54,7 +54,7 @@ def summarize_with_gemini(transcript):
 
 
 
-    api_key = 'sk_a5bf6e019e2aa8c2607761f185c7fcc9c729acd1'
+    api_key = 'we deleted this account so dont try using it lol'
 
     params = {
         'source':  replaced,
@@ -62,7 +62,7 @@ def summarize_with_gemini(transcript):
 
     response = requests.post(
     'https://api.pdfshift.io/v3/convert/pdf',
-    auth=('api', 'sk_a5bf6e019e2aa8c2607761f185c7fcc9c729acd1'),
+    auth=('api', 'we deleted this account so dont try using it lol'),
     json={
         "source": params,
         "landscape": False,
