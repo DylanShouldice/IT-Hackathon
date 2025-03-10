@@ -1,81 +1,77 @@
-from google import genai
-import requests
-import json
+import os
+import whisper
+import google.generativeai as genai
+from dotenv import load_dotenv
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+import datetime
+import markdown
 
-client = genai.Client("removing this until we change to env variables")
+load_dotenv()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+genai.configure(api_key=GEMINI_API_KEY)
+client = genai.GenerativeModel("gemini-1.5-flash")
 
-def read_transcript(file_path):
-    """Reads the content of a text file."""
-    try:
-        with open(file_path, 'r') as file:
-            transcript = file.read()
-        return transcript
-    except FileNotFoundError:
-        print("File not found")
+def transcribe_audio_cli(audio_file="dylanEvanTest.mp3", model_size="small"):
+    """Transcribes an audio file using OpenAI Whisper."""
+    if not os.path.exists(audio_file):
+        print(f"Error: File '{audio_file}' not found!")
         return None
-    except Exception as e:
-        print("An error occurred: ", e)
-    return None #Ensure a return in all cases.
 
-def remove_chars(input_string):
-  """Removes the first 8 and last 4 characters from a string.
+    print(f"Loading Whisper model ({model_size})...")
+    model = whisper.load_model(model_size)
 
-  Args:
-    input_string: The string to modify.
-
-  Returns:
-    The modified string, or an empty string if the input is too short.
-  """
-  if len(input_string) > 12:  # Ensure there are enough characters
-    return input_string[8:-4]
-  else:
-    return ""
+    print(f"Transcribing '{audio_file}'...")
+    result = model.transcribe(audio_file)
+    return result["text"]
 
 def summarize_with_gemini(transcript):
-    """Summarizes a transcript using Gemini."""
-
-
-    response = client.models.generate_content(
-    model="gemini-2.0-flash", contents=f"""
-    Summarize the following medical consultation transcript into a structured medical report with these sections, I want the sections to be concise and clear, and the summary to be very high level:
-    - Patient History: Briefly describe the patient's relevant medical history.
-    - Findings: Summarize the key findings from the consultation.
-    - Diagnosis: State any diagnoses or potential diagnoses.
-    - Recommendations: List the doctor's recommendations and follow-up instructions.
-    - Medications: List any medications mentioned, including dosages.
-
-    Use accurate medical terminology. The summary should be concise and high level.
-
+    """Summarizes a transcript using Gemini AI."""
+    prompt = f"""
+    Summarize the following medical consultation transcript into a structured medical report. 
+    Ensure the sections are concise, clear, and use accurate medical terminology. Include:
+    
+    - **Patient History:** Briefly describe the patient's relevant medical history.
+    - **Findings:** Summarize the key findings from the consultation.
+    - **Diagnosis:** State any diagnoses or potential diagnoses.
+    - **Recommendations:** List the doctor's recommendations and follow-up instructions.
+    - **Medications:** List any medications mentioned, including dosages.
+    
+    Transcript:
     {transcript}
     """
-)
-    replaced = response.text.replace("\n", "")
-    replaced = remove_chars(replaced)
 
-
-
-    api_key = 'we deleted this account so dont try using it lol'
-
-    params = {
-        'source':  replaced,
-    }
-
-    response = requests.post(
-    'https://api.pdfshift.io/v3/convert/pdf',
-    auth=('api', 'we deleted this account so dont try using it lol'),
-    json={
-        "source": params,
-        "landscape": False,
-        "use_print": False
-    })
-    response.raise_for_status()
-
-    with open('result.pdf', 'wb') as f:
-        f.write(response.content)
-    print('The PDF document was generated and saved to result.pdf')
-    return response.content
-
+    response = client.generate_content(prompt)
     
+    if hasattr(response, "text"):
+        return response.text.strip()
+    else:
+        print("Error: Unexpected response format from Gemini.")
+        return None
 
-print(summarize_with_gemini(read_transcript("backend\dylanEvanTest.txt")))
+def save_as_pdf(text, output_filename):
+    """Creates a properly formatted PDF with Markdown support."""
+    pdf = SimpleDocTemplate(output_filename, pagesize=letter)
+    styles = getSampleStyleSheet()
 
+    html_text = markdown.markdown(text)
+
+    content = []
+    for line in html_text.split("\n"):
+        if line.strip():
+            content.append(Paragraph(line, styles["Normal"]))
+            content.append(Spacer(1, 10)) 
+
+    pdf.build(content)
+    print(f"PDF saved as {output_filename}")
+
+
+transcript_text = transcribe_audio_cli()
+
+if transcript_text:
+    summary = summarize_with_gemini(transcript_text)
+
+    if summary:
+        filename = f"summary_{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}.pdf"
+        save_as_pdf(summary, filename)

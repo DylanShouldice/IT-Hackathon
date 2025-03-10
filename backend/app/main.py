@@ -10,8 +10,6 @@ import traceback
 
 
 app = FastAPI()
-
-# Expand the origins list to include all possible localhost ports
 origins = ["*"]
 
 app.add_middleware(
@@ -22,11 +20,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global exception handler to prevent 500 errors from blocking CORS
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     error_detail = str(exc)
-    # Log the full traceback for debugging
     print(f"Global exception: {error_detail}")
     print(traceback.format_exc())
     
@@ -39,7 +35,6 @@ async def global_exception_handler(request: Request, exc: Exception):
 def read_root():
     return {"Hello": "World"}
 
-# Dependency to get the database session
 def get_db():
     db = SessionLocal()
     try:
@@ -50,7 +45,6 @@ def get_db():
 @app.get("/api/patients", response_model=List[PatientResponse])
 def get_patients_by_doctor(doctor_id: int = Query(...), db: Session = Depends(get_db)):
     try:
-        # Query for consultations based on doctor_id
         consultations = db.query(Consultation).filter(Consultation.doctor_id == doctor_id).all()
         
         if not consultations:
@@ -64,15 +58,12 @@ def get_patients_by_doctor(doctor_id: int = Query(...), db: Session = Depends(ge
         
         return patients
     except Exception as e:
-        # Catch any unexpected errors to provide better feedback
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
-# Add an options endpoint for CORS preflight requests
 @app.options("/api/patients")
 async def options_patients():
     return {}
 
-# Add a recording endpoint for your audio recordings
 @app.post("/api/recordings")
 async def save_recording():
     return {"status": "success", "message": "Recording saved successfully"}
