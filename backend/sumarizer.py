@@ -7,6 +7,8 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 import datetime
 import markdown
+import torch
+from bs4 import BeautifulSoup
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -20,7 +22,16 @@ def transcribe_audio_cli(audio_file="dylanEvanTest.mp3", model_size="small"):
         return None
 
     print(f"Loading Whisper model ({model_size})...")
-    model = whisper.load_model(model_size)
+    if torch.cuda.is_available():
+        print(f"CUDA is available. Using GPU: {torch.cuda.get_device_name(0)}")
+        model = whisper.load_model(model_size, device="cuda")
+    else:
+        print("CUDA is not available. Using CPU.")
+        model = whisper.load_model(model_size, device="cpu")
+
+
+    
+    
 
     print(f"Transcribing '{audio_file}'...")
     result = model.transcribe(audio_file)
@@ -32,11 +43,11 @@ def summarize_with_gemini(transcript):
     Summarize the following medical consultation transcript into a structured medical report. 
     Ensure the sections are concise, clear, and use accurate medical terminology. Include:
     
-    - **Patient History:** Briefly describe the patient's relevant medical history.
-    - **Findings:** Summarize the key findings from the consultation.
-    - **Diagnosis:** State any diagnoses or potential diagnoses.
-    - **Recommendations:** List the doctor's recommendations and follow-up instructions.
-    - **Medications:** List any medications mentioned, including dosages.
+    - ## Patient History: Briefly describe the patient's relevant medical history.
+    - ## Findings: Summarize the key findings from the consultation.
+    - ## Diagnosis: State any diagnoses or potential diagnoses.
+    - ## Recommendations: List the doctor's recommendations and follow-up instructions.
+    - ## Medications: List any medications mentioned, including dosages.
     
     Transcript:
     {transcript}
@@ -45,7 +56,10 @@ def summarize_with_gemini(transcript):
     response = client.generate_content(prompt)
     
     if hasattr(response, "text"):
-        return response.text.strip()
+        summary_text = response.text.strip()
+        print("Generated Summary:")
+        print(summary_text)
+        return summary_text
     else:
         print("Error: Unexpected response format from Gemini.")
         return None
@@ -54,18 +68,25 @@ def save_as_pdf(text, output_filename):
     """Creates a properly formatted PDF with Markdown support."""
     pdf = SimpleDocTemplate(output_filename, pagesize=letter)
     styles = getSampleStyleSheet()
-
     html_text = markdown.markdown(text)
 
+    soup = BeautifulSoup(html_text, "html.parser")
+
     content = []
-    for line in html_text.split("\n"):
-        if line.strip():
-            content.append(Paragraph(line, styles["Normal"]))
-            content.append(Spacer(1, 10)) 
+    for element in soup.contents:
+        if element.name:
+            if element.name == "h1":
+                content.append(Paragraph(element.text, styles["Heading1"]))
+            elif element.name == "h2":
+                content.append(Paragraph(element.text, styles["Heading2"]))
+            elif element.name == "h3":
+                content.append(Paragraph(element.text, styles["Heading3"]))
+            else:
+                content.append(Paragraph(element.text, styles["Normal"]))
+            content.append(Spacer(1, 10))
 
     pdf.build(content)
     print(f"PDF saved as {output_filename}")
-
 
 transcript_text = transcribe_audio_cli()
 

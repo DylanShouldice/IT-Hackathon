@@ -65,5 +65,7 @@ async def options_patients():
     return {}
 
 @app.post("/api/recordings")
-async def save_recording():
+async def save_recording(doctor_id: int = Query(...) client_id: int Query(...), db: Session = Depends(get_db)):
+    # Save the recording to the database
+    db.query(Consultation).filter(Consultation.doctor_id == doctor_id Consultation.client_id == client_id).post()
     return {"status": "success", "message": "Recording saved successfully"}

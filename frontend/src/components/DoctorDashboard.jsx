@@ -1,15 +1,28 @@
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import axios from 'axios'
 
-const patients = [
-	{ id: 1, name: 'John Doe', reports: ['report1.pdf', 'report2.pdf'] },
-	{ id: 2, name: 'Jane Smith', reports: ['report3.pdf'] },
-	{ id: 3, name: 'Michael Brown', reports: ['report4.pdf', 'report5.pdf'] },
-]
-
-function PatientTable({ patients }) {
+function PatientTable({ doctorId, setPatients }) {
+	const [patients, setLocalPatients] = useState([]) // Set initial state as an empty array
 	const [selectedReports, setSelectedReports] = useState(null)
-	const [recordingStatus, setRecordingStatus] = useState({}) // Store recording status for each patient
+	const [recordingStatus, setRecordingStatus] = useState({})
 	const recordingWindowsRef = useRef({}) // Store references to recording windows
+
+	useEffect(() => {
+		const fetchPatients = async () => {
+			try {
+				const response = await axios.get('http://localhost:8000/api/patients', {
+					params: { doctor_id: doctorId },
+				})
+				setLocalPatients(response.data)
+			} catch (error) {
+				console.error('Error fetching patients:', error)
+			}
+		}
+
+		if (doctorId) {
+			fetchPatients()
+		}
+	}, [doctorId])
 
 	const handleViewReports = (reports) => {
 		setSelectedReports(reports)
@@ -279,7 +292,7 @@ function PatientTable({ patients }) {
               formData.append('pausePoints', JSON.stringify(recordingData.pausePoints.map(d => d.toISOString())));
               
               // Send to server
-              const apiUrl = '/api/recordings';  // Replace with your actual API endpoint
+              const apiUrl = 'http://localhost:8000/api/recordings';
               
               fetch(apiUrl, {
                 method: 'POST',
@@ -365,7 +378,7 @@ function PatientTable({ patients }) {
 	}
 
 	// Handle messages from recording windows
-	useState(() => {
+	useEffect(() => {
 		const handleMessage = (event) => {
 			// Check for recording update messages
 			if (event.data && event.data.type === 'recordingUpdate') {
@@ -404,7 +417,9 @@ function PatientTable({ patients }) {
 					{patients.map((patient) => (
 						<tr key={patient.id}>
 							<td className='px-4 py-2'>{patient.id}</td>
-							<td className='px-4 py-2'>{patient.name}</td>
+							<td className='px-4 py-2'>
+								{patient.first_name + ' ' + patient.last_name}
+							</td>
 							<td className='px-4 py-2'>
 								<button
 									className='bg-transparent border border-gray-400 text-gray-800 py-1 px-2 rounded-sm text-sm flex items-center'
@@ -413,7 +428,6 @@ function PatientTable({ patients }) {
 								</button>
 							</td>
 							<td className='px-4 py-2'>
-								{/* Recording controls */}
 								<div className='flex items-center space-x-2'>
 									{recordingWindowsRef.current[patient.id] ? (
 										<button
@@ -464,7 +478,7 @@ function PatientTable({ patients }) {
 	)
 }
 
-function QuickStats() {
+function QuickStats({ patients }) {
 	return (
 		<div className='grid grid-cols-3 gap-4'>
 			<div className='bg-white p-4 rounded-lg shadow-md'>
@@ -483,7 +497,7 @@ function QuickStats() {
 	)
 }
 
-export default function DoctorDashboard() {
+function DoctorDashboard() {
 	return (
 		<div className='flex min-h-screen bg-gray-100'>
 			<div className='w-64 bg-gray-800 text-white p-4'>
@@ -491,9 +505,10 @@ export default function DoctorDashboard() {
 			</div>
 			<main className='flex-1 p-6 space-y-6'>
 				<h1 className='text-2xl font-bold'>Doctor Dashboard</h1>
-				<QuickStats />
-				<PatientTable patients={patients} />
+				<PatientTable doctorId={1} setPatients={() => {}} />{' '}
 			</main>
 		</div>
 	)
 }
+
+export default DoctorDashboard
